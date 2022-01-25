@@ -892,6 +892,9 @@ ProgramParams::ProgramParams(int argc, char *argv[])
     {
         this->lib_search_dirs.push_back(a);
     }
+    else {
+        this->lib_search_dirs.push_back("@MACPORTS_MRUSTC_LIBDIR@");
+    }
 
     // Hacky command-line parsing
     for( int i = 1; i < argc; i ++ )
