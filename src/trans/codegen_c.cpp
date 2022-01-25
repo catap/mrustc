@@ -1161,7 +1161,7 @@ namespace {
                         args.push_back( Target_GetCurSpec().m_backend_c.m_c_compiler + "-gcc" );
                     }
                     else {
-                        args.push_back("gcc");
+                        args.push_back("@MACPORTS_MRUSTC_CC@");
                     }
                 }
                 arg_file_start = args.get_vec().size();
