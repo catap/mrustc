@@ -322,3 +322,24 @@ index eed315c929a..649b35f9430 100644
  struct macho_commands_view
  {
      struct backtrace_view view;
+diff --git src/libstd/sys/unix/condvar.rs src/libstd/sys/unix/condvar.rs
+index 0a93fbf8ea7..463d436b95d 100644
+--- src/libstd/sys/unix/condvar.rs
++++ src/libstd/sys/unix/condvar.rs
+@@ -164,14 +164,14 @@ impl Condvar {
+     }
+ 
+     #[inline]
+-    #[cfg(not(target_os = "dragonfly"))]
++    #[cfg(all(not(target_os = "dragonfly"), not(target_os = "macos")))]
+     pub unsafe fn destroy(&self) {
+         let r = libc::pthread_cond_destroy(self.inner.get());
+         debug_assert_eq!(r, 0);
+     }
+ 
+     #[inline]
+-    #[cfg(target_os = "dragonfly")]
++    #[cfg(any(target_os = "dragonfly", target_os = "macos"))]
+     pub unsafe fn destroy(&self) {
+         let r = libc::pthread_cond_destroy(self.inner.get());
+         // On DragonFly pthread_cond_destroy() returns EINVAL if called on
