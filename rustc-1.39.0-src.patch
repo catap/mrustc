@@ -343,3 +343,60 @@ index 0a93fbf8ea7..463d436b95d 100644
      pub unsafe fn destroy(&self) {
          let r = libc::pthread_cond_destroy(self.inner.get());
          // On DragonFly pthread_cond_destroy() returns EINVAL if called on
+--- vendor/libgit2-sys/libgit2/src/streams/stransport.c
++++ vendor/libgit2-sys/libgit2/src/streams/stransport.c
+@@ -270,7 +270,7 @@
+ 	    (ret = SSLSetConnection(st->ctx, st->io)) != noErr ||
+ 	    (ret = SSLSetSessionOption(st->ctx, kSSLSessionOptionBreakOnServerAuth, true)) != noErr ||
+ 	    (ret = SSLSetProtocolVersionMin(st->ctx, kTLSProtocol1)) != noErr ||
+-	    (ret = SSLSetProtocolVersionMax(st->ctx, kTLSProtocol12)) != noErr ||
++	    (ret = SSLSetProtocolVersionMax(st->ctx, kTLSProtocol1)) != noErr ||
+ 	    (ret = SSLSetPeerDomainName(st->ctx, host, strlen(host))) != noErr) {
+ 		CFRelease(st->ctx);
+ 		git__free(st);
+diff --git vendor/crypto-hash/Cargo.toml vendor/crypto-hash/Cargo.toml
+index 297c4f07..98183e3d 100644
+--- vendor/crypto-hash/Cargo.toml
++++ vendor/crypto-hash/Cargo.toml
+@@ -23,10 +23,8 @@ license = "MIT"
+ repository = "https://github.com/malept/crypto-hash"
+ [dependencies.hex]
+ version = "0.3"
+-[target."cfg(not(any(target_os = \"windows\", target_os = \"macos\")))".dependencies.openssl]
++[target."cfg(not(any(target_os = \"windows\")))".dependencies.openssl]
+ version = "0.10"
+-[target."cfg(target_os = \"macos\")".dependencies.commoncrypto]
+-version = "0.2"
+ [target."cfg(target_os = \"windows\")".dependencies.winapi]
+ version = "0.3"
+ features = ["minwindef", "wincrypt"]
+diff --git vendor/crypto-hash/src/lib.rs vendor/crypto-hash/src/lib.rs
+index e01f7e78..b11889bb 100644
+--- vendor/crypto-hash/src/lib.rs
++++ vendor/crypto-hash/src/lib.rs
+@@ -43,23 +43,17 @@
+ 
+ #![warn(missing_docs)]
+ 
+-#[cfg(target_os = "macos")]
+-extern crate commoncrypto;
+-extern crate hex;
+-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
++#[cfg(not(any(target_os = "windows")))]
+ extern crate openssl;
+ #[cfg(target_os = "windows")]
+ extern crate winapi;
+ 
+ use std::io::Write;
+ 
+-#[cfg(target_os = "macos")]
+-#[path = "imp/commoncrypto.rs"]
+-mod imp;
+ #[cfg(target_os = "windows")]
+ #[path = "imp/cryptoapi.rs"]
+ mod imp;
+-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
++#[cfg(not(any(target_os = "windows")))]
+ #[path = "imp/openssl.rs"]
+ mod imp;
+ 
