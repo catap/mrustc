@@ -543,6 +543,14 @@ namespace
                 ARCH_X86_64
                 };
         }
+        else if(target_name == "i686-apple-darwin")
+        {
+            // NOTE: OSX uses Mach-O binaries, which don't fully support the defaults used for GNU targets
+            return TargetSpec {
+                "unix", "macos", "gnu", {CodegenMode::Gnu11, false, "i686-apple-darwin", {}, {}},
+                ARCH_X86
+                };
+        }
         else if(target_name == "x86_64-apple-darwin")
         {
             // NOTE: OSX uses Mach-O binaries, which don't fully support the defaults used for GNU targets

@@ -87,6 +87,8 @@
 #elif defined(__APPLE__)
 # if defined(__aarch64__)
 #  define DEFAULT_TARGET_NAME "aarch64-apple-darwin"
+# elif defined(__i386__)
+#  define DEFAULT_TARGET_NAME "i686-apple-darwin"
 # else
 #  define DEFAULT_TARGET_NAME "x86_64-apple-darwin"
 #endif
