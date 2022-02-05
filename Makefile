@@ -59,12 +59,13 @@ CXXFLAGS += -Wno-unknown-warning-option
 
 CXXFLAGS += -Werror=return-type
 
+LIBS_DIR ?= output$(OUTDIR_SUF)
 
 # - Flags to pass to all mrustc invocations
 RUST_FLAGS := --cfg debug_assertions
 RUST_FLAGS += -g
 RUST_FLAGS += -O
-RUST_FLAGS += -L output$(OUTDIR_SUF)/
+RUST_FLAGS += -L $(LIBS_DIR)/
 RUST_FLAGS += $(RUST_FLAGS_EXTRA)
 
 SHELL = bash
@@ -91,7 +92,11 @@ endif
 
 LINKFLAGS += $(LINKFLAGS_EXTRA)
 
-BIN := bin/mrustc$(EXESUF)
+MRUSTC_DEFAULT := bin/mrustc$(EXESUF)
+MINICARGO_DEFAULT := bin/minicargo$(EXESUF)
+
+MRUSTC ?= $(MRUSTC_DEFAULT)
+MINICARGO ?= $(MINICARGO_DEFAULT)
 
 OBJ := main.o version.o
 OBJ += span.o rc_string.o debug.o ident.o
@@ -151,10 +156,10 @@ PCHS := ast/ast.hpp
 OBJ := $(addprefix $(OBJDIR),$(OBJ))
 
 
-all: $(BIN)
+all: $(MRUSTC)
 
 clean:
-	$(RM) -r $(BIN) $(OBJ) bin/mrustc.a
+	$(RM) -r $(MRUSTC_DEFAULT) $(MINICARGO_DEFAULT) $(OBJ) bin/mrustc.a
 
 
 PIPECMD ?= 2>&1 | tee $@_dbg.txt | tail -n $(TAIL_COUNT) ; test $${PIPESTATUS[0]} -eq 0
@@ -176,16 +181,18 @@ RUSTC_SRC_DL := $(RUSTCSRC)/dl-version
 MAKE_MINICARGO = $(MAKE) -f minicargo.mk RUSTC_VERSION=$(RUSTC_VERSION) RUSTC_CHANNEL=$(RUSTC_SRC_TY) OUTDIR_SUF=$(OUTDIR_SUF)
 
 
-output$(OUTDIR_SUF)/libstd.rlib: $(RUSTC_SRC_DL) $(BIN)
+$(MINICARGO):
 	$(MAKE_MINICARGO) $@
-output$(OUTDIR_SUF)/libtest.rlib output$(OUTDIR_SUF)/libpanic_unwind.rlib output$(OUTDIR_SUF)/libproc_macro.rlib: output$(OUTDIR_SUF)/libstd.rlib
+$(LIBS_DIR)/libstd.rlib: $(RUSTC_SRC_DL) $(MRUSTC) $(MINICARGO)
 	$(MAKE_MINICARGO) $@
-output$(OUTDIR_SUF)/rustc output$(OUTDIR_SUF)/cargo: output$(OUTDIR_SUF)/libtest.rlib
+$(LIBS_DIR)/libtest.rlib $(LIBS_DIR)/libpanic_unwind.rlib $(LIBS_DIR)/libproc_macro.rlib: $(LIBS_DIR)/libstd.rlib
+	$(MAKE_MINICARGO) $@
+output$(OUTDIR_SUF)/rustc output$(OUTDIR_SUF)/cargo: $(LIBS_DIR)/libtest.rlib
 	$(MAKE_MINICARGO) $@
 
-TEST_DEPS := output$(OUTDIR_SUF)/libstd.rlib output$(OUTDIR_SUF)/libtest.rlib output$(OUTDIR_SUF)/libpanic_unwind.rlib output$(OUTDIR_SUF)/libproc_macro.rlib
+TEST_DEPS := $(LIBS_DIR)/libstd.rlib $(LIBS_DIR)/libtest.rlib $(LIBS_DIR)/libpanic_unwind.rlib $(LIBS_DIR)/libproc_macro.rlib
 
-fcn_extcrate = $(patsubst %,output$(OUTDIR_SUF)/lib%.rlib,$(1))
+fcn_extcrate = $(patsubst %,$(LIBS_DIR)/lib%.rlib,$(1))
 
 fn_getdeps = \
   $(shell cat $1 \
@@ -291,7 +298,7 @@ endif
 output$(OUTDIR_SUF)/rust/test_run-pass_hello: $(RUST_TESTS_DIR)$(HELLO_TEST) $(TEST_DEPS)
 	@mkdir -p $(dir $@)
 	@echo "--- [MRUSTC] -o $@"
-	$(DBG) $(BIN) $< -o $@ $(RUST_FLAGS) $(PIPECMD)
+	$(DBG) $(MRUSTC) $< -o $@ $(RUST_FLAGS) $(PIPECMD)
 output$(OUTDIR_SUF)/rust/test_run-pass_hello_out.txt: output$(OUTDIR_SUF)/rust/test_run-pass_hello
 	@echo "--- [$<]"
 	@./$< | tee $@
@@ -305,7 +312,7 @@ bin/mrustc.a: $(filter-out $(OBJDIR)main.o, $(OBJ))
 	@echo [AR] $@
 	$V$(AR) crs $@ $(filter-out $(OBJDIR)main.o, $(OBJ))
 
-$(BIN): $(OBJDIR)main.o bin/mrustc.a bin/common_lib.a
+$(MRUSTC_DEFAULT): $(OBJDIR)main.o bin/mrustc.a bin/common_lib.a
 	@+mkdir -p $(dir $@)
 	@echo [CXX] -o $@
 ifeq ($(OS),Windows_NT)
@@ -314,9 +321,9 @@ else ifeq ($(shell uname -s || echo not),Darwin)
 	$V$(CXX) -o $@ $(LINKFLAGS) $(OBJDIR)main.o -Wl,-all_load bin/mrustc.a bin/common_lib.a $(LIBS)
 else
 	$V$(CXX) -o $@ $(LINKFLAGS) $(OBJDIR)main.o -Wl,--whole-archive bin/mrustc.a -Wl,--no-whole-archive bin/common_lib.a $(LIBS)
-	objcopy --only-keep-debug $(BIN) $(BIN).debug
-	objcopy --add-gnu-debuglink=$(BIN).debug $(BIN)
-	strip $(BIN)
+	objcopy --only-keep-debug $(MRUSTC) $(MRUSTC).debug
+	objcopy --add-gnu-debuglink=$(MRUSTC).debug $(MRUSTC)
+	strip $(MRUSTC)
 endif
 
 $(OBJDIR)%.o: src/%.cpp
