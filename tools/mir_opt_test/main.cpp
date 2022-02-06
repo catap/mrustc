@@ -18,7 +18,7 @@
 # include <sys/stat.h>
 #endif
 
-TargetVersion	gTargetVersion = TargetVersion::Rustc1_29;
+TargetVersion	gTargetVersion = TargetVersion::Rustc@MACPORTS_MRUSTC_TARGET_VER@;
 
 struct Options
 {

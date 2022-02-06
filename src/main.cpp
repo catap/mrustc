@@ -37,7 +37,7 @@
 # include <DbgHelp.h>
 #endif
 
-TargetVersion	gTargetVersion = TargetVersion::Rustc1_29;
+TargetVersion	gTargetVersion = TargetVersion::Rustc@MACPORTS_MRUSTC_TARGET_VER@;
 
 struct ProgramParams
 {
@@ -891,6 +891,9 @@ ProgramParams::ProgramParams(int argc, char *argv[])
     if( const auto* a = getenv("MRUSTC_LIBDIR") )
     {
         this->lib_search_dirs.push_back(a);
+    }
+    else {
+        this->lib_search_dirs.push_back("@MACPORTS_MRUSTC_LIBDIR@");
     }
 
     // Hacky command-line parsing
