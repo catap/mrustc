@@ -122,25 +122,3 @@
  impl<Tag: fmt::Debug, Id: fmt::Debug> fmt::Debug for Scalar<Tag, Id> {
      fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 
-# Workaround linker error attempting to find symbol CFMutableAttributedStringGetTypeID on macOS.
-# See details at https://github.com/servo/core-foundation-rs/pull/357
---- vendor/core-foundation/src/attributed_string.rs
-+++ vendor/core-foundation/src/attributed_string.rs
-@@ -41,7 +41,7 @@ impl CFAttributedString {
- declare_TCFType!{
-     CFMutableAttributedString, CFMutableAttributedStringRef
- }
--impl_TCFType!(CFMutableAttributedString, CFMutableAttributedStringRef, CFMutableAttributedStringGetTypeID);
-+impl_TCFType!(CFMutableAttributedString, CFMutableAttributedStringRef, CFAttributedStringGetTypeID);
- 
- impl CFMutableAttributedString {
-     #[inline]
---- vendor/core-foundation-sys/src/attributed_string.rs
-+++ vendor/core-foundation-sys/src/attributed_string.rs
-@@ -51,6 +51,4 @@ extern {
-         attr_name: CFStringRef,
-         value: CFTypeRef,
-     );
--
--    pub fn CFMutableAttributedStringGetTypeID() -> CFTypeID;
- }
