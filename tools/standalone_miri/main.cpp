@@ -33,7 +33,7 @@ struct ProgramOptions
     void show_help(const char* prog) const;
 };
 
-TargetVersion	gTargetVersion = TargetVersion::Rustc1_29;
+TargetVersion	gTargetVersion = TargetVersion::Rustc@MACPORTS_MRUSTC_TARGET_VER@;
 
 int main(int argc, const char* argv[])
 {
